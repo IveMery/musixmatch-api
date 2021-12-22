@@ -1,44 +1,42 @@
-import React, { createContext, useEffect, useState } from "react";
-import { chartTracksGet, trackSearch } from "../constants";
+import React, { createContext, useState, useEffect } from "react";
+import { chartTracksGet, trackSearch } from "./../constants";
 
-export const SongsContext = createContext(); // create context para hacer el provider
+export const SongsContext = createContext();
 
 const SongsContextProvider = ({ children }) => {
   const [doneFetch, setDoneFetch] = useState();
   const [currentQTrack, setCurrentQTrack] = useState("");
-  const [text, setText] = useState("Top songs");
+  const [text, setText] = useState("Top Songs");
   const [tracks, setTracks] = useState([]);
 
+  // didMount, didUpdate, willUnmount
   useEffect(() => {
-    getTopTrack();
+    getTopTracks();
   }, []);
 
-  const getTopTrack = () => {
+  const getTopTracks = () => {
     fetch(chartTracksGet())
-      .then((response) => response.json())
+      .then((res) => res.json())
       .then((data) => {
-        const { track_list } = data.message.body;
-        setTracks(track_list);
         setDoneFetch(true);
+        setTracks(data.message.body.track_list);
+        console.log(data.message.body.track_list);
         console.log(tracks);
       })
-      .catch((error) => {
-        console.log(error);
-      });
+      .catch((err) => console.log(err));
   };
 
-  const getTracks = (q) => {
-    fetch(trackSearch(q))
+  const getTracks = (q_track) => {
+    fetch(trackSearch(q_track))
       .then((res) => res.json())
       .then((data) => {
         const { track_list } = data.message.body;
         setDoneFetch(true);
+        setText(track_list.length ? "Results" : "No Results");
         setTracks(track_list);
-        setText(track_list.length ? " Results" : "No results");
+        console.log(track_list);
       })
-      .catch((error) => {
-        console.log(error);
-      });
+      .catch((err) => console.log(err));
   };
 
   const validateQTrack = (
@@ -52,18 +50,12 @@ const SongsContextProvider = ({ children }) => {
       setCurrentQTrack(q_track);
       setDoneFetch(false);
       getTracks(q_track);
+      console.log(q_track);
     }
   };
 
   return (
-    <SongsContext.Provider
-      value={{
-        doneFetch,
-        text,
-        tracks,
-        validateQTrack,
-      }}
-    >
+    <SongsContext.Provider value={{ doneFetch, text, tracks, validateQTrack }}>
       {children}
     </SongsContext.Provider>
   );
